@@ -85,7 +85,7 @@ def main(argv):
             energy = extract_energy(data,fs,p)
             length = extract_length(data,fs,p)
 
-            feats = np.column_stack((mfccs,energy,length))
+            feats = np.column_stack((mfccs,energy,length)).astype(np.float32)
             labels = [label]*feats.shape[0]
 
             #Saves means and stds for every feature on the training list

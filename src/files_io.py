@@ -1,6 +1,7 @@
 import os
 import struct
 from ast import literal_eval
+from keras.models import model_from_json
 
 import pdb
 
@@ -79,3 +80,32 @@ def save_feats_labs(odir, feats, labs):
         f.write(feats[i].tostring())
 
     f.close()
+
+def load_scalers(scalers_dir):
+    f = open(scalers_dir, 'r')
+    f.readline()
+
+    out = []
+
+    for line in f.readlines():
+
+        line = line.strip()
+        line = line.split(',')
+
+        mean = float(line[0])
+        std = float(line[1])
+
+        out.append([mean,std])
+
+    return out
+
+def load_model(model_name):
+    # load json and create model
+    json_file = open('./output/'+model_name+'/'+model_name+'.json', 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    model = model_from_json(loaded_model_json)
+    # load weights into new model
+    model.load_weights('./output/'+model_name+'/'+model_name+'.h5')
+
+    return model
