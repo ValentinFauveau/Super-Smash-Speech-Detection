@@ -1,0 +1,52 @@
+##########################################
+##### GENERATE LISTS PARAMETERS ##########
+##########################################
+
+# Name for the generated lists
+lst_name = 'all'
+
+# Data directory
+data_dir = "./data/raw"
+
+# train, validation and test split
+tr_split = 0.8
+val_split = 0.1
+tst_split = 0.1
+
+##########################################
+###### FEATURE EXTRACTION PARAMETERS #####
+##########################################
+
+#Assign labels to integer numbers
+LABELS = {"Ness":1, "Cloud":2, "Isabelle":3}
+
+#Name of the list to use
+lst_to_use = 'all'
+
+### For all features
+winlen = 30e-3
+winstep = 30e-3
+
+### Frequency Feature Extraction, MFCCs
+f_mfccs = True
+nfilt = 26
+nfft = 2048
+
+### Energy Feature
+f_energy = True
+
+### Length Feature
+f_length = True
+
+##########################################
+###### TRAINING PARAMETERS ###############
+##########################################
+
+#Features to use
+feats_to_use = 'all'
+
+#Model to use: 'nn', 'logreg'
+model = 'logreg'
+
+#Batch batch_size
+batch_size = 10
