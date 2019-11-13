@@ -5,6 +5,7 @@ import numpy as np
 
 import files_io
 from generator import Generator
+from statistics import mode
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -40,8 +41,7 @@ def main(argv):
     tst_datagen = Generator(tst_dir, scalers)
 
     #Dimensions of the data
-    tst_nb_frames = tst_datagen.get_nbframes()
-    tst_step_per_epoch = tst_nb_frames // batch_size
+    nb_files = tst_datagen.get_nbfiles()
 
     #Load model
     model = files_io.load_model(model_name)
@@ -50,21 +50,44 @@ def main(argv):
     predictions = []
     gt = []
 
-    for _ in range(tst_step_per_epoch):
-        X_test, y_test = next(tst_datagen.flow_from_dir(feats_dim,batch_size,len(LABELS)))
+    file_predictions = []
+    file_class = []
+
+    import glob
+    aa = glob.glob(tst_dir+'*.feats')
+
+    temp_gen = tst_datagen.file_flow(len(LABELS))
+
+    for i in range(nb_files):
+        X_test, y_test, file = next(temp_gen)
         preds = model.predict_classes(X_test, batch_size=batch_size, verbose=0)
+
+        print('***>File: '+file)
+        print('Frame predictions:')
+        print(preds)
+        print('Ground Truth:')
+        print(np.argmax(y_test,axis=1))
+        print('File Prediction: '+str(mode(preds)) + ' Class: '+ str(np.argmax(y_test,axis=1)[0]))
+        print('\n')
 
         gt.append(np.argmax(y_test,axis=1))
         predictions.append(preds)
+        file_class.append(np.argmax(y_test,axis=1)[0])
+        file_predictions.append(mode(preds))
 
     gt = np.concatenate(gt)
     predictions = np.concatenate(predictions)
 
-    tp = np.sum(gt == predictions)
+    tp = np.sum(np.equal(gt,predictions).astype(int))
+    tp_file = np.sum(np.equal(file_class,file_predictions).astype(int))
 
     accuracy = tp/len(gt)
+    accuracy_file = tp_file/len(file_class)
 
-    print('The Accuracy of the model is: ' + str(np.round(accuracy,3)))
+    print('Accuracy Frame Based: ' + str(np.round(accuracy,3)))
+    print('Accuracy File Based: ' + str(np.round(accuracy_file,3)))
+
+    # end of the main function
 
 
 if __name__ == "__main__":

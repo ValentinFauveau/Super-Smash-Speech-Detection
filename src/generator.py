@@ -60,12 +60,65 @@ class Generator():
                     batch_labels[index] = self.one_hot_encoder(label, num_classes)
                     index += 1
 
+    #This is a generator function to yield the feats, labels and filename of each one
+    #of the files in the dataset.
+    #The files are yield one by one
+    #The output size depends on the number of frames and features for each file
+    def file_flow(self, num_classes):
+
+        batch_feats = []
+        batch_labels = []
+
+        chunks = {}
+        N_frames = 0
+        send = False
+
+        for chunk in glob.glob(self.data_dir+'*.feats'):
+            chunks[chunk] = list(range(self.read_nframes(chunk)))
+            N_frames += self.read_nframes(chunk)
+
+        rnd_chunk = random.choice(list(chunks.keys()))
+
+        while len(chunks) != 0:
+
+            frame = chunks[rnd_chunk][0]
+
+            chunks[rnd_chunk].remove(frame)
+
+            if len(chunks[rnd_chunk]) == 0:
+                send = True
+                del chunks[rnd_chunk]
+
+            feats, label = self.read_frame(rnd_chunk,frame)
+
+            if self.scalers_dir != None:
+                feats = self.scale_values(feats, self.scalers_dir)
+
+            if send == True:
+                batch_feats.append(feats)
+                batch_labels.append(self.one_hot_encoder(label, num_classes))
+                batch_feats = np.row_stack(batch_feats)
+                batch_labels = np.row_stack(batch_labels)
+
+                yield (batch_feats , batch_labels, rnd_chunk)
+                rnd_chunk = random.choice(list(chunks.keys()))
+                batch_feats = []
+                batch_labels = []
+                send = False
+            else:
+                batch_feats.append(feats)
+                batch_labels.append(self.one_hot_encoder(label, num_classes))
+
+
 
     def get_nbframes(self):
         N_frames = 0
         for chunk in glob.glob(self.data_dir+'*.feats'):
             N_frames += self.read_nframes(chunk)
         return N_frames
+
+    def get_nbfiles(self):
+        return len(glob.glob(self.data_dir+'*.feats'))
 
     def read_nframes(self, chunk):
         f = open(chunk, 'rb')

@@ -48,7 +48,9 @@ def main(argv):
     #Load the features
     #Generators
     tr_datagen = Generator(tr_dir, scalers)
+    tr_flow_datagen = tr_datagen.flow_from_dir(feats_dim,batch_size,len(LABELS))
     val_datagen = Generator(val_dir, scalers)
+    val_flow_datagen = val_datagen.flow_from_dir(feats_dim,batch_size,len(LABELS))
 
     #Dimensions of the data
     tr_nb_frames = tr_datagen.get_nbframes()
@@ -78,9 +80,9 @@ def main(argv):
     # pdb.set_trace()
 
     #Fit the model
-    h = model.fit_generator(tr_datagen.flow_from_dir(feats_dim,batch_size,len(LABELS))
-            , validation_data=val_datagen.flow_from_dir(feats_dim,batch_size,len(LABELS))
-            , steps_per_epoch=tr_step_per_epoch, epochs=nepochs, validation_steps=val_step_per_epoch, verbose=1)
+    h = model.fit_generator(tr_flow_datagen , validation_data=val_flow_datagen,
+            steps_per_epoch=tr_step_per_epoch, epochs=nepochs,
+            validation_steps=val_step_per_epoch, verbose=1)
 
     model_json = model.to_json()
     ## save the model architecture
